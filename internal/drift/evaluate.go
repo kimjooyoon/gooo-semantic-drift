@@ -56,7 +56,7 @@ func LoadMeta(root string) (Meta, error) {
 	if err := decoder.Decode(&ir); err != nil {
 		return Meta{}, err
 	}
-	if ir.Schema != IRScheme || ir.SourcePath == "" || ir.ContractPath == "" || len(ir.Activities) != contract.Total {
+	if ir.Schema != IRSchema || ir.SourcePath == "" || ir.ContractPath == "" || len(ir.Activities) != contract.Total {
 		return Meta{}, errors.New("INVALID_SEMANTIC_IR")
 	}
 	if ir.SourceDigest != DigestBytes(source) || ir.ContractDigest != DigestBytes(contractRaw) {
