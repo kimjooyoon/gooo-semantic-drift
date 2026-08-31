@@ -65,7 +65,10 @@ jobs:
         run: |
           set -euo pipefail
           start=$(date +%s%N)
-          /usr/bin/time -f '%M' -o "$RUNNER_TEMP/test-rss" go test -json ./... > "$RUNNER_TEMP/test.json"
+          if ! /usr/bin/time -f '%M' -o "$RUNNER_TEMP/test-rss" go test -json ./... > "$RUNNER_TEMP/test.json"; then
+            cat "$RUNNER_TEMP/test.json"
+            exit 1
+          fi
           end=$(date +%s%N)
           executed=$(jq -R -s '[split("\n")[] | select(length > 0) | fromjson? | select(.Test != null and (.Action == "pass" or .Action == "fail" or .Action == "skip"))] | length' "$RUNNER_TEMP/test.json")
           skipped=$(jq -R -s '[split("\n")[] | select(length > 0) | fromjson? | select(.Test != null and .Action == "skip")] | length' "$RUNNER_TEMP/test.json")
