@@ -1,0 +1,39 @@
+{
+  "schema": "gooo/semantic-drift/development-provenance/v1",
+  "direct_main_commit_count": 1,
+  "direct_main_commits": [
+    {
+      "sha": "e83e42611eeed30100018a98c1f1835e1f17b821",
+      "branch": "main",
+      "classification": "KNOWN_PR_FIRST_DEVIATION_SUBSTANTIVE_IMPLEMENTATION",
+      "changed_paths": [
+        {"path": ".github/workflows/ci.yml", "added_lines": 145, "deleted_lines": 0, "line_start": 1, "line_end": 145},
+        {"path": "LICENSE", "added_lines": 21, "deleted_lines": 0, "line_start": 1, "line_end": 21},
+        {"path": "README.md", "added_lines": 46, "deleted_lines": 0, "line_start": 1, "line_end": 46},
+        {"path": "cmd/gooo-drift/main.go", "added_lines": 169, "deleted_lines": 0, "line_start": 1, "line_end": 169},
+        {"path": "contracts/semantic-drift-denominator-v1.json", "added_lines": 22, "deleted_lines": 0, "line_start": 1, "line_end": 22},
+        {"path": "docs/protocol-v1.md", "added_lines": 45, "deleted_lines": 0, "line_start": 1, "line_end": 45},
+        {"path": "examples/semantic-drift/main.gooo", "added_lines": 18, "deleted_lines": 0, "line_start": 1, "line_end": 18},
+        {"path": "fixtures/cases/behavior-regression.json", "added_lines": 34, "deleted_lines": 0, "line_start": 1, "line_end": 34},
+        {"path": "fixtures/cases/equivalent-replay.json", "added_lines": 65, "deleted_lines": 0, "line_start": 1, "line_end": 65},
+        {"path": "fixtures/cases/explicit-denominator-migration.json", "added_lines": 41, "deleted_lines": 0, "line_start": 1, "line_end": 41},
+        {"path": "fixtures/cases/inferred-identity-drift.json", "added_lines": 31, "deleted_lines": 0, "line_start": 1, "line_end": 31},
+        {"path": "fixtures/cases/stale-unbounded.json", "added_lines": 31, "deleted_lines": 0, "line_start": 1, "line_end": 31},
+        {"path": "go.mod", "added_lines": 3, "deleted_lines": 0, "line_start": 1, "line_end": 3},
+        {"path": "internal/drift/compile.go", "added_lines": 166, "deleted_lines": 0, "line_start": 1, "line_end": 166},
+        {"path": "internal/drift/digest.go", "added_lines": 34, "deleted_lines": 0, "line_start": 1, "line_end": 34},
+        {"path": "internal/drift/drift_test.go", "added_lines": 44, "deleted_lines": 0, "line_start": 1, "line_end": 44},
+        {"path": "internal/drift/evaluate.go", "added_lines": 410, "deleted_lines": 0, "line_start": 1, "line_end": 410},
+        {"path": "internal/drift/model.go", "added_lines": 398, "deleted_lines": 0, "line_start": 1, "line_end": 398},
+        {"path": "internal/drift/report.go", "added_lines": 62, "deleted_lines": 0, "line_start": 1, "line_end": 62},
+        {"path": "internal/generated/semantic-ir.json", "added_lines": 159, "deleted_lines": 0, "line_start": 1, "line_end": 159},
+        {"path": "internal/generated/semantic.gooo.go", "added_lines": 39, "deleted_lines": 0, "line_start": 1, "line_end": 39},
+        {"path": "scripts/conformance.sh", "added_lines": 29, "deleted_lines": 0, "line_start": 1, "line_end": 29}
+      ],
+      "implementation_lines_added": 2012
+    }
+  ],
+  "process_state": "REFUTED",
+  "known_deviation": "The substantive implementation was pushed to main before the single implementation PR was opened.",
+  "next_operation": "PRESERVE_DIRECT_MAIN_HISTORY_AND_REPORT_REFUTED_PROCESS_STATE_WHILE_COLLECTING_FINAL_PR_AND_RELEASE_EVIDENCE"
+}
