@@ -1,0 +1,145 @@
+name: Semantic drift CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  conformance:
+    name: conformance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.27.x'
+
+      - name: gofmt
+        run: |
+          set -euo pipefail
+          files=$(gofmt -l .)
+          printf '%s\n' "$files"
+          gofmt -d .
+          test -z "$files"
+
+      - name: Build and measure
+        id: build
+        run: |
+          set -euo pipefail
+          start=$(date +%s%N)
+          /usr/bin/time -f '%M' -o "$RUNNER_TEMP/build-rss" go build -trimpath -o "$RUNNER_TEMP/gooo-drift" ./cmd/gooo-drift
+          end=$(date +%s%N)
+          echo "wall_ms=$(( (end-start)/1000000 ))" >> "$GITHUB_OUTPUT"
+          echo "peak_rss_kib=$(cat "$RUNNER_TEMP/build-rss")" >> "$GITHUB_OUTPUT"
+
+      - name: Test and measure
+        id: test
+        run: |
+          set -euo pipefail
+          start=$(date +%s%N)
+          /usr/bin/time -f '%M' -o "$RUNNER_TEMP/test-rss" go test -json ./... > "$RUNNER_TEMP/test.json"
+          end=$(date +%s%N)
+          executed=$(jq -R -s '[split("\n")[] | select(length > 0) | fromjson? | select(.Test != null and (.Action == "pass" or .Action == "fail" or .Action == "skip"))] | length' "$RUNNER_TEMP/test.json")
+          skipped=$(jq -R -s '[split("\n")[] | select(length > 0) | fromjson? | select(.Test != null and .Action == "skip")] | length' "$RUNNER_TEMP/test.json")
+          reused=$(jq -R -s '[split("\n")[] | select(contains("(cached)"))] | length' "$RUNNER_TEMP/test.json")
+          echo "wall_ms=$(( (end-start)/1000000 ))" >> "$GITHUB_OUTPUT"
+          echo "peak_rss_kib=$(cat "$RUNNER_TEMP/test-rss")" >> "$GITHUB_OUTPUT"
+          echo "executed=$executed" >> "$GITHUB_OUTPUT"
+          echo "reused=$reused" >> "$GITHUB_OUTPUT"
+          echo "skipped=$skipped" >> "$GITHUB_OUTPUT"
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: Race tests
+        run: go test -race ./...
+
+      - name: Regenerate semantic chain in a temporary directory
+        run: |
+          set -euo pipefail
+          generated="$RUNNER_TEMP/generated"
+          mkdir -p "$generated"
+          go run ./cmd/gooo-drift compile \
+            -source examples/semantic-drift/main.gooo \
+            -contract contracts/semantic-drift-denominator-v1.json \
+            -output-ir "$generated/semantic-ir.json" \
+            -output-go "$generated/semantic.gooo.go"
+          diff -u internal/generated/semantic-ir.json "$generated/semantic-ir.json"
+          diff -u internal/generated/semantic.gooo.go "$generated/semantic.gooo.go"
+
+      - name: Conformance and replay
+        id: conformance
+        run: |
+          set -euo pipefail
+          artifact_root="$RUNNER_TEMP/conformance"
+          mkdir -p "$artifact_root"
+          repo_snapshot() {
+            find "$GITHUB_WORKSPACE" -path "$GITHUB_WORKSPACE/.git" -prune -o -type f -print0 |
+              sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}'
+          }
+          repo_snapshot > "$RUNNER_TEMP/repository-before"
+          start=$(date +%s%N)
+          /usr/bin/time -f '%M' -o "$RUNNER_TEMP/conformance-rss" bash scripts/conformance.sh "$RUNNER_TEMP/gooo-drift" "$GITHUB_WORKSPACE" "$artifact_root"
+          end=$(date +%s%N)
+          repo_snapshot > "$RUNNER_TEMP/repository-after"
+          echo "wall_ms=$(( (end-start)/1000000 ))" >> "$GITHUB_OUTPUT"
+          echo "peak_rss_kib=$(cat "$RUNNER_TEMP/conformance-rss")" >> "$GITHUB_OUTPUT"
+
+      - name: Build human-readable CI artifact
+        id: artifact
+        run: |
+          set -euo pipefail
+          root="$GITHUB_WORKSPACE"
+          reports="$RUNNER_TEMP/conformance"
+          count_lines() {
+            find "$root" -path "$root/.git" -prune -o -type f ! -path "$root/README.md" -name "$1" -print0 |
+              xargs -0 awk '{n++} END {print n+0}'
+          }
+          descendant_dirs=$(find "$root" -path "$root/.git" -prune -o -mindepth 1 -type d -print | wc -l | tr -d ' ')
+          regular_files=$(find "$root" -path "$root/.git" -prune -o -type f ! -path "$root/README.md" -print | wc -l | tr -d ' ')
+          go_files=$(find "$root" -path "$root/.git" -prune -o -type f ! -path "$root/README.md" -name '*.go' -print | wc -l | tr -d ' ')
+          gooo_files=$(find "$root" -path "$root/.git" -prune -o -type f ! -path "$root/README.md" -name '*.gooo' -print | wc -l | tr -d ' ')
+          go_lines=$(count_lines '*.go')
+          gooo_lines=$(count_lines '*.gooo')
+          artifact_files=$(find "$reports" -type f -print | wc -l | tr -d ' ')
+          artifact_bytes=$(find "$reports" -type f -print0 | xargs -0 stat -c '%s' | awk '{n+=$1} END {print n+0}')
+          repository_writes=0
+          if test "$(cat "$RUNNER_TEMP/repository-before")" != "$(cat "$RUNNER_TEMP/repository-after")"; then repository_writes=1; fi
+          jq -S -n \
+            --arg commit "${{ github.event.pull_request.head.sha || github.sha }}" \
+            --argjson descendant_dirs "$descendant_dirs" \
+            --argjson regular_files "$regular_files" \
+            --argjson go_files "$go_files" \
+            --argjson go_lines "$go_lines" \
+            --argjson gooo_files "$gooo_files" \
+            --argjson gooo_lines "$gooo_lines" \
+            --argjson build_wall_ms "${{ steps.build.outputs.wall_ms }}" \
+            --argjson build_peak_rss_kib "${{ steps.build.outputs.peak_rss_kib }}" \
+            --argjson test_wall_ms "${{ steps.test.outputs.wall_ms }}" \
+            --argjson test_peak_rss_kib "${{ steps.test.outputs.peak_rss_kib }}" \
+            --argjson conformance_wall_ms "${{ steps.conformance.outputs.wall_ms }}" \
+            --argjson conformance_peak_rss_kib "${{ steps.conformance.outputs.peak_rss_kib }}" \
+            --argjson test_executed "${{ steps.test.outputs.executed }}" \
+            --argjson test_reused "${{ steps.test.outputs.reused }}" \
+            --argjson test_skipped "${{ steps.test.outputs.skipped }}" \
+            --argjson artifact_files "$artifact_files" \
+            --argjson artifact_bytes "$artifact_bytes" \
+            --argjson repository_writes "$repository_writes" \
+            '{schema:"gooo/semantic-drift/ci-artifact/v1",subject_commit:$commit,root_readme_excluded:true,repository:{descendant_dirs:$descendant_dirs,regular_files:$regular_files,go_physical_files:$go_files,go_physical_lines:$go_lines,gooo_physical_files:$gooo_files,gooo_physical_lines:$gooo_lines,repository_writes:$repository_writes},ci:{build_wall_ms:$build_wall_ms,build_peak_rss_kib:$build_peak_rss_kib,test_wall_ms:$test_wall_ms,test_peak_rss_kib:$test_peak_rss_kib,conformance_wall_ms:$conformance_wall_ms,conformance_peak_rss_kib:$conformance_peak_rss_kib,test_executed:$test_executed,test_reused:$test_reused,test_skipped:$test_skipped},artifact:{scope:"conformance/",files:$artifact_files,bytes:$artifact_bytes},evaluation_authority:{repository_writes:0,local_test_executions:0,cross_project_required_gates:0},states:{precedence:["REFUTED","UNKNOWN","CLOSED"],percentage:false,score:false,inferred_improvement:false,cache_hit_as_proof:false},conformance_index:"conformance-index.json"}' > "$reports/ci-artifact.json"
+          {
+            echo '## Semantic drift conformance'
+            jq -r '.cases[] | "- \(.case_id): \(.decision) (replay total=\(.replay_counts.total), equivalent=\(.replay_counts.equivalent), contradiction=\(.replay_counts.contradiction), unknown=\(.replay_counts.unknown))"' "$reports/conformance-index.json"
+            jq -r '"- states: CLOSED=\(.states.CLOSED), UNKNOWN=\(.states.UNKNOWN), REFUTED=\(.states.REFUTED)","- repository writes: \(.repository.repository_writes)","- artifact files/bytes: \(.artifact.files)/\(.artifact.bytes)","- Go files/lines: \(.repository.go_physical_files)/\(.repository.go_physical_lines)","- Gooo files/lines: \(.repository.gooo_physical_files)/\(.repository.gooo_physical_lines)","- build/test/conformance wall ms: \(.ci.build_wall_ms)/\(.ci.test_wall_ms)/\(.ci.conformance_wall_ms)","- peak RSS KiB: \(.ci.build_peak_rss_kib)/\(.ci.test_peak_rss_kib)/\(.ci.conformance_peak_rss_kib)","- tests executed/reused/skipped: \(.ci.test_executed)/\(.ci.test_reused)/\(.ci.test_skipped)"' "$reports/ci-artifact.json"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "artifact_path=$reports" >> "$GITHUB_OUTPUT"
+
+      - name: Upload conformance artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gooo-semantic-drift-conformance
+          path: ${{ steps.artifact.outputs.artifact_path }}
+          if-no-files-found: error

@@ -1,0 +1,31 @@
+{
+  "schema": "gooo/semantic-drift/input/v1",
+  "case_id": "inferred-identity-drift",
+  "base": {
+    "envelope": {
+      "schema": "gooo/semantic-drift/envelope/v1", "envelope_id": "language-1-compiler-1",
+      "language_release": {"name": "gooo-language", "version": "1.0.0", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"},
+      "compiler_release": {"id": "gooo-compiler", "version": "1.0.0", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"},
+      "syntax_denominator": [{"ordinal": 1, "id": "syntax.literal", "canonical_name": "literal", "semantics_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"}, {"ordinal": 2, "id": "syntax.identifier", "canonical_name": "identifier", "semantics_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"}],
+      "schema_fingerprint": {"id": "gooo/ast", "version": "v1", "digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555"},
+      "lowering": [{"source_id": "syntax.identifier", "target_id": "ast.identifier", "identity_mode": "explicit", "mapping_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666"}, {"source_id": "syntax.literal", "target_id": "ast.literal", "identity_mode": "explicit", "mapping_digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777"}],
+      "generated_artifacts": [{"name": "parser.go", "kind": "go-source", "digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888"}, {"name": "evaluator.wasm", "kind": "evaluator", "digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999"}],
+      "release_digest": "sha256:b0b44e5c46c640a8340621b4d529d16eac549470a4ca7f66f1f65f342988daf0"
+    }, "observed_digest": "sha256:b0b44e5c46c640a8340621b4d529d16eac549470a4ca7f66f1f65f342988daf0"
+  },
+  "candidate": {
+    "envelope": {
+      "schema": "gooo/semantic-drift/envelope/v1", "envelope_id": "language-1-compiler-inferred",
+      "language_release": {"name": "gooo-language", "version": "1.0.0", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"},
+      "compiler_release": {"id": "gooo-compiler", "version": "1.2.0", "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+      "syntax_denominator": [{"ordinal": 1, "id": "syntax.literal", "canonical_name": "literal", "semantics_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"}, {"ordinal": 2, "id": "syntax.identifier", "canonical_name": "identifier", "semantics_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"}],
+      "schema_fingerprint": {"id": "gooo/ast", "version": "v1", "digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555"},
+      "lowering": [{"source_id": "syntax.identifier", "target_id": "ast.identifier", "identity_mode": "explicit", "mapping_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666"}, {"source_id": "syntax.literal", "target_id": "ast.number", "identity_mode": "inferred", "mapping_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}],
+      "generated_artifacts": [{"name": "parser.go", "kind": "go-source", "digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888"}, {"name": "evaluator.wasm", "kind": "evaluator", "digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999"}],
+      "release_digest": "sha256:15c047618c45202dd8b1c41ad6f1edd19a7a97340ed24e25e08d5e5dcfbd3dae"
+    }, "observed_digest": "sha256:15c047618c45202dd8b1c41ad6f1edd19a7a97340ed24e25e08d5e5dcfbd3dae"
+  },
+  "denominator_migrations": [], "schema_migration": null, "lowering_evidence": [], "artifact_evidence": [],
+  "replay": {"corpus_id": "corpus-inferred-v1", "bound": true, "expected_input_ids": ["input-0"], "observations": [{"input_id": "input-0", "input_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "replay_status": "REPLAYED", "base": {"envelope_digest": "sha256:b0b44e5c46c640a8340621b4d529d16eac549470a4ca7f66f1f65f342988daf0", "value_digest": "sha256:1010101010101010101010101010101010101010101010101010101010101010"}, "candidate": {"envelope_digest": "sha256:15c047618c45202dd8b1c41ad6f1edd19a7a97340ed24e25e08d5e5dcfbd3dae", "value_digest": "sha256:1010101010101010101010101010101010101010101010101010101010101010"}}]},
+  "optional_inputs": [], "authority": {"repository_writes": 0, "local_test_executions": 0, "cross_project_required_gates": 0}
+}
