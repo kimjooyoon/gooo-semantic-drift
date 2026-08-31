@@ -31,7 +31,7 @@ func TestConformanceFixtures(t *testing.T) {
 		}
 		result := Evaluate(raw, meta)
 		if result.Decision.State != expected {
-			t.Errorf("%s: expected %s, got %s", name, expected, result.Decision.State)
+			t.Errorf("%s: expected %s, got %s (reason=%s contradictions=%v unknowns=%v)", name, expected, result.Decision.State, result.Decision.Reason, result.Contradictions, result.Unknowns)
 		}
 		for _, unknown := range result.Unknowns {
 			if unknown.Stage == "" || unknown.Step == "" || unknown.Reason == "" || unknown.UnknownClass == "" || unknown.NextOperation == "" || len(unknown.BlockedBy) == 0 {
