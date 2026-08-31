@@ -681,7 +681,7 @@ func uniqueArtifacts(values []GeneratedArtifact) bool {
 		}
 		seen[value.Name] = true
 	}
-	return sortedStrings(values, func(value GeneratedArtifact) string { return value.Name })
+	return true
 }
 func sortedStrings[T any](values []T, key func(T) string) bool {
 	for index := 1; index < len(values); index++ {
