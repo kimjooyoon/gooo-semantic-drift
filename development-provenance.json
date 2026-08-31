@@ -35,5 +35,22 @@
   ],
   "process_state": "REFUTED",
   "known_deviation": "The substantive implementation was pushed to main before the single implementation PR was opened.",
+  "release_audit_attempts": [
+    {
+      "tag": "v0.1.0",
+      "release_id": 379661097,
+      "state": "REFUTED",
+      "reason": "RELEASE_IMMUTABLE_FALSE",
+      "immutable": false,
+      "expected_commit": "89377e44c96f6cefff75d05d5c0a8eb3df6d4944",
+      "tag_object": "1848e9b81cb785bda35123f091d3cc2d182669b1",
+      "tag_target": "89377e44c96f6cefff75d05d5c0a8eb3df6d4944",
+      "asset_id": 537804378,
+      "asset_name": "gooo-semantic-drift-v0.1.0.tar.gz",
+      "asset_bytes": 27856,
+      "asset_digest": "sha256:4090d0b25bd2c58499aa57fa2ffa14f59fa38848bad97faaf7348b2cbb0c5ad2",
+      "next_operation": "ENABLE_REPOSITORY_IMMUTABLE_RELEASES_AND_AUDIT_V0.1.1"
+    }
+  ],
   "next_operation": "PRESERVE_DIRECT_MAIN_HISTORY_AND_REPORT_REFUTED_PROCESS_STATE_WHILE_COLLECTING_FINAL_PR_AND_RELEASE_EVIDENCE"
 }
