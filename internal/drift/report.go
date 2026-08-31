@@ -32,31 +32,45 @@ func HumanReport(evaluation Evaluation) string {
 	fmt.Fprintf(&builder, "`%s` (%s) -> `%s` (%s) -> `%s` (%s) -> `%s` (%s)\n", evaluation.Manifest.AuthorityChain.Source.Path, evaluation.Manifest.AuthorityChain.Source.Digest, evaluation.Manifest.AuthorityChain.SemanticIR.Path, evaluation.Manifest.AuthorityChain.SemanticIR.Digest, evaluation.Manifest.AuthorityChain.GeneratedGo.Path, evaluation.Manifest.AuthorityChain.GeneratedGo.Digest, evaluation.Manifest.AuthorityChain.Evaluator.Path, evaluation.Manifest.AuthorityChain.Evaluator.Digest)
 	if len(evaluation.Unknowns) > 0 {
 		builder.WriteString("\n## UNKNOWN records\n\n")
-		for _, item := range evaluation.Unknowns { fmt.Fprintf(&builder, "- stage=`%s`, step=`%s`, reason=`%s`, unknown_class=`%s`, next_operation=`%s`, blocked_by=`%s`\n", item.Stage, item.Step, item.Reason, item.UnknownClass, item.NextOperation, strings.Join(item.BlockedBy, ",")) }
+		for _, item := range evaluation.Unknowns {
+			fmt.Fprintf(&builder, "- stage=`%s`, step=`%s`, reason=`%s`, unknown_class=`%s`, next_operation=`%s`, blocked_by=`%s`\n", item.Stage, item.Step, item.Reason, item.UnknownClass, item.NextOperation, strings.Join(item.BlockedBy, ","))
+		}
 	}
-	if len(evaluation.Contradictions) > 0 { fmt.Fprintf(&builder, "\n## REFUTED contradictions\n\n- %s\n", strings.Join(evaluation.Contradictions, "\n- ")) }
+	if len(evaluation.Contradictions) > 0 {
+		fmt.Fprintf(&builder, "\n## REFUTED contradictions\n\n- %s\n", strings.Join(evaluation.Contradictions, "\n- "))
+	}
 	return builder.String()
 }
 
 func WriteEvaluation(outputDir string, evaluation Evaluation) error {
-	if outputDir == "" || !filepath.IsAbs(outputDir) { return fmt.Errorf("output directory must be an absolute caller-owned path") }
+	if outputDir == "" || !filepath.IsAbs(outputDir) {
+		return fmt.Errorf("output directory must be an absolute caller-owned path")
+	}
 	files := map[string]any{
-		"drift-manifest.json": evaluation.Manifest,
-		"causal-evidence.json": evaluation.CausalEvidence,
-		"replay-receipt.json": evaluation.Replay,
+		"drift-manifest.json":   evaluation.Manifest,
+		"causal-evidence.json":  evaluation.CausalEvidence,
+		"replay-receipt.json":   evaluation.Replay,
 		"decision-receipt.json": evaluation.Decision,
 	}
-	if err := os.MkdirAll(outputDir, 0o755); err != nil { return err }
+	if err := os.MkdirAll(outputDir, 0o755); err != nil {
+		return err
+	}
 	for name, value := range files {
 		raw, err := json.MarshalIndent(value, "", "  ")
-		if err != nil { return err }
-		if err := os.WriteFile(filepath.Join(outputDir, name), append(raw, '\n'), 0o644); err != nil { return err }
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(filepath.Join(outputDir, name), append(raw, '\n'), 0o644); err != nil {
+			return err
+		}
 	}
 	return os.WriteFile(filepath.Join(outputDir, "human-report.md"), []byte(evaluation.HumanReport), 0o644)
 }
 
 func WriteJSON(path string, value any) error {
 	raw, err := json.MarshalIndent(value, "", "  ")
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	return os.WriteFile(path, append(raw, '\n'), 0o644)
 }
